@@ -115,6 +115,8 @@ const applicationSchema = z.object({
   answer: text.min(MIN_APPLICATION_ANSWER_LENGTH),
   sourceNotes: text,
   generatedAnswer: text,
+  /** Candidate-written scope split (E1 scenario). Optional so version-1 saves stay valid. */
+  ownership: z.object({ mine: text, team: text, result: text }).optional(),
   score: z.number().int().min(0).max(100),
   summary: text,
   stage: z.enum(stages),
