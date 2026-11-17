@@ -14,6 +14,7 @@ import { currentPerson, publishedJobs, stageLabels, MIN_APPLICATION_ANSWER_LENGT
 import { PageTitle, Empty, NotFound, Notice } from "./shell";
 import { CvAttachment } from "./cv-attachment";
 import { MatchScore } from "./match-score";
+import { ownershipExcerpt } from "./ownership-fields";
 import { RecruitingApplication } from "./recruiting-application";
 import { CandidateApplication } from "./candidate-application";
 
@@ -413,8 +414,9 @@ export function ApplyPage() {
 export function ApplicationsPage({ employer = false }: { employer?: boolean }) {
   const { state } = usePrototype();
   const person = currentPerson(state)!;
-  const [query, setQuery] = useState("");
   const [params] = useSearchParams();
+  // ?q= prefills the search so a facilitator can open one job's list directly.
+  const [query, setQuery] = useState(() => params.get("q") ?? "");
   const applications = state.applications.filter(
     (x) =>
       (employer ? x.companyId === person.companyId : x.candidateId === person.id) &&
@@ -452,8 +454,15 @@ export function ApplicationsPage({ employer = false }: { employer?: boolean }) {
                   </p>
                   <p>{stageLabels[a.stage]}</p>
                 </div>
-                <MatchScore score={a.score} />
+                {!(employer && a.ownership) && <MatchScore score={a.score} />}
               </div>
+              {employer && a.ownership && (
+                <div className="ownership-excerpt">
+                  <p className="ownership-excerpt-label">Moja część</p>
+                  <p>{ownershipExcerpt(a.ownership)}</p>
+                  <MatchScore score={a.score} />
+                </div>
+              )}
               {employer && <p className="mt-4 text-muted-foreground">{a.summary}</p>}
             </article>
           ))

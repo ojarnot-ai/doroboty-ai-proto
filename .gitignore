@@ -8,3 +8,6 @@ artifacts/
 *.tsbuildinfo
 .env*
 npm-debug.log*
+
+# Facilitator-only data (e.g. real E1 outcomes). Never commit or ship to participants.
+facilitator/

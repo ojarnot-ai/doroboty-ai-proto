@@ -4,6 +4,7 @@ import { ProcessTimeline } from "@/components/process-timeline";
 import { RecordSheet } from "@/components/record-sheet";
 import { CvAttachment } from "./cv-attachment";
 import { MatchScore } from "./match-score";
+import { OwnershipFields } from "./ownership-fields";
 import { stageLabels, type Application, type Stage } from "./model";
 
 type RecordEvent = { stage: Stage; at: string; note?: string };
@@ -24,7 +25,15 @@ export function ApplicationRecord({
 }: {
   application: Pick<
     Application,
-    "candidateId" | "candidateName" | "jobTitle" | "stage" | "answer" | "cv" | "score" | "summary"
+    | "candidateId"
+    | "candidateName"
+    | "jobTitle"
+    | "stage"
+    | "answer"
+    | "cv"
+    | "score"
+    | "summary"
+    | "ownership"
   >;
   companyName: string;
   audience: "candidate" | "employer";
@@ -37,6 +46,8 @@ export function ApplicationRecord({
   const title = candidate ? application.jobTitle : application.candidateName;
   const context = candidate ? application.candidateName : application.jobTitle;
   const submitted = history[0];
+  // With scope fields the score moves below them, so the fields are read first (E1 version B).
+  const ownership = application.ownership;
   return (
     <article className="recruiting-record">
       <header className="recruiting-header">
@@ -55,7 +66,7 @@ export function ApplicationRecord({
           <span className="record-stage" tabIndex={-1} ref={statusRef}>
             {stageLabels[application.stage]}
           </span>
-          <MatchScore score={application.score} />
+          {!ownership && <MatchScore score={application.score} />}
           {submitted && (
             <span>
               Złożona:{" "}
@@ -73,6 +84,13 @@ export function ApplicationRecord({
               label: "Odpowiedź",
               content: (
                 <>
+                  {ownership && (
+                    <div className="ownership-block">
+                      <h3>Zakres w projekcie</h3>
+                      <OwnershipFields ownership={ownership} />
+                      <MatchScore score={application.score} />
+                    </div>
+                  )}
                   <h3>Przesłana aplikacja</h3>
                   <p>{application.answer}</p>
                 </>
