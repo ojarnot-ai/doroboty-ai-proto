@@ -21,6 +21,10 @@ Out of scope: external error reporting services, Netlify UI changes, alert confi
 - `npm run build` output is unchanged by `netlify.toml`; Netlify reads command `npm run build` and directory `dist`.
 - A render error inside a page shows the error screen instead of a blank page; header and navigation remain usable; navigating to another page or pressing retry clears it.
 - The download button saves the raw browser save when one exists (works even if in-memory state is the cause), and is absent when there is nothing saved.
-- Keyboard: the screen's heading receives focus; buttons are reachable with Tab; works at 375 px and desktop.
+- Keyboard: the error screen (labelled by its heading) receives focus; buttons are reachable with Tab; a failed retry is announced; works at 375 px and desktop.
 - No external requests; no private free text logged.
 - FEATURES.md documents the error screen; `./scripts/verify` steps pass (full gate needs Node 24).
+
+## Review pass (2026-11-17)
+
+A separate review of 712452d found no blockers. Applied: no `role="alert"` on the focused screen (avoids double announcement), focus timer cleared on unmount, failed-retry status message, accurate wording that React still logs the technical error to the console, and RELEASE.md notes on blank pages, last-persisted saves and `NODE_VERSION` overriding `.nvmrc`. Kept as is: boundary scope limited to page content (task scope); FEATURES.md in the participant package references non-shipped hosting files (the row says so).
