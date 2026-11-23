@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -66,6 +67,7 @@ export function EmployerJobs() {
   );
 }
 export function EmployerJobEditor() {
+  const posthog = usePostHog();
   const { id } = useParams();
   const { state, run } = usePrototype();
   const person = currentPerson(state)!;
@@ -133,7 +135,19 @@ export function EmployerJobEditor() {
       );
       return;
     }
-    if (run({ type: "publish", job: parsed.data })) navigate("/app/oferty");
+    if (run({ type: "publish", job: parsed.data })) {
+      posthog?.capture("job_published", {
+        category: parsed.data.category,
+        function: parsed.data.function,
+        is_new_job: !existing,
+      });
+      posthog?.logger.info("job publication completed", {
+        category: parsed.data.category,
+        function: parsed.data.function,
+        is_new_job: !existing,
+      });
+      navigate("/app/oferty");
+    }
   }
   return (
     <>
@@ -170,6 +184,7 @@ export function EmployerJobEditor() {
               setGenerated(
                 `${title}\n\nO roli\n${source.trim().slice(0, 10000)}\n\nJak pracujemy\nŁączymy potrzeby użytkowników, odpowiedzialne wykorzystanie AI i mierzalne efekty.\n\nProces rekrutacji\nPrześlij aplikację i opowiedz o projekcie, w którym Twoje decyzje wpłynęły na wynik.`,
               );
+              posthog?.capture("job_description_generated");
               setApproved(false);
             }}
           >
@@ -187,6 +202,7 @@ export function EmployerJobEditor() {
               onClick={() => {
                 setDescription(generated);
                 if (!summary) setSummary(source.slice(0, 180));
+                posthog?.capture("job_description_applied");
                 setApproved(false);
               }}
             >
@@ -273,6 +289,7 @@ export function EmployerJobEditor() {
   );
 }
 export function CompanyEditor() {
+  const posthog = usePostHog();
   const { state, run } = usePrototype();
   const person = currentPerson(state)!;
   const company = state.companies.find((x) => x.id === person.companyId)!;
@@ -286,8 +303,10 @@ export function CompanyEditor() {
         name: String(data.get("name")),
         description: String(data.get("description")),
       })
-    )
+    ) {
+      posthog?.capture("company_profile_updated");
       setMessage("Dane firmy zostały zapisane.");
+    }
   }
   return (
     <>

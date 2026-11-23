@@ -1,5 +1,8 @@
+import { usePostHog } from "@posthog/react";
+import { useEffect, useRef } from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router";
-import { PrototypeProvider } from "./store";
+import { currentPerson } from "./model";
+import { PrototypeProvider, usePrototype } from "./store";
 import { Shell, NotFound } from "./shell";
 import HomePage from "./home";
 import MethodologyPage from "./methodology";
@@ -17,6 +20,38 @@ import {
 import { EmployerJobs, EmployerJobEditor, CompanyEditor } from "./employer";
 import { SettingsPage, PrivacyPage } from "./settings";
 import { CasePage } from "./case";
+
+function PostHogIdentity() {
+  const { state } = usePrototype();
+  const posthog = usePostHog();
+  const identifiedPersonId = useRef<string | null>(null);
+  const person = currentPerson(state);
+
+  useEffect(() => {
+    if (!posthog) return;
+
+    if (!person) {
+      if (identifiedPersonId.current) {
+        posthog.reset();
+        identifiedPersonId.current = null;
+      }
+      return;
+    }
+
+    if (identifiedPersonId.current === person.id) return;
+
+    if (identifiedPersonId.current) posthog.reset();
+
+    posthog.identify(person.id, {
+      name: person.name,
+      role: person.role,
+    });
+    identifiedPersonId.current = person.id;
+  }, [person, posthog]);
+
+  return null;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -150,6 +185,7 @@ function AppRoutes() {
 export function App() {
   return (
     <PrototypeProvider>
+      <PostHogIdentity />
       <HashRouter>
         <AppRoutes />
       </HashRouter>
