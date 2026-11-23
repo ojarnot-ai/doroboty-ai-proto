@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowUpRight, Users, MapPin, BriefcaseBusiness, Bookmark } from "lucide-react";
@@ -97,6 +98,7 @@ function LocalMap({ jobs }: { jobs: JobWithCompany[] }) {
   );
 }
 export function JobsPage() {
+  const posthog = usePostHog();
   const { state } = usePrototype();
   const person = currentPerson(state);
   const [params, setParams] = useSearchParams();
@@ -147,6 +149,14 @@ export function JobsPage() {
       else next.delete(key);
     }
     setParams(next);
+    posthog?.capture("job_search_submitted", {
+      has_query: next.has("query"),
+      has_location: next.has("location"),
+    });
+    posthog?.logger.info("job search filters applied", {
+      has_query: next.has("query"),
+      has_location: next.has("location"),
+    });
   }
   const locations = [...new Set(all.flatMap((x) => x.locations))];
   return (
